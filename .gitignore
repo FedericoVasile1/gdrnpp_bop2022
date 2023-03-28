@@ -56,3 +56,6 @@ events.out.tfevents*
 /models
 
 #external/*
+
+lib/mmcv
+*.o

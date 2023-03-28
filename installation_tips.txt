@@ -1,0 +1,50 @@
+pip install torch==1.10.0+cu111 torchvision==0.11.0+cu111 torchaudio==0.10.0 -f https://download.pytorch.org/whl/torch_stable.html
+pip install pytorch-lightning==1.6.2
+pip install setuptools==59.5.0
+python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
+pip install mmcv-full takes forever, you must compile it from source following https://mmcv.readthedocs.io/en/latest/get_started/build.html
+
+sh scripts/install_deps.sh
+
+when all installation is completed, you might encounter an error when calling
+cv2.imshow. uninstall and reinstall opencv to solve the issue
+pip uninstall opencv-python; pip install opencv-python==4.7.0.72
+
+you can install everthing with sh scripts/compile_all.sh
+however, before running the above script three steps are required:
+1: uncomment the line sh build_ceres.sh in scripts/compile_all.sh
+2: add mkdir lib after cd ../../.. in core/csrc/uncertainty_pnp/build_ceres.sh
+3: look for libglog.so in your system and write its correct path in core/csrc/uncertainty_pnp/setup.py
+
+
+if the error "libglog.so is not found" is raised when 
+compiling "sh compile_uncertainty_pnp.sh" search for the file in your system
+and soft link it to the repo, i.e.:
+cd gdrnpp_bop2022/core/csrc/uncertainty_pnp
+ln -s /usr/lib/x86_64-linux-gnu/libglog.so .
+
+install the bop_toolkit,
+e.g., pip install glumpy; pip install git+https://github.com/thodan/bop_toolkit
+
+install the bop renderer from the following link https://github.com/thodan/bop_renderer
+bash ../osmesa-install.sh
+pay attention that before doing "cmake .." and "make" you have to do two thing:
+1: modify lines 22, 25, 33 to pick the python you want to use (i.e., replace 3.6 with 3.7)
+2: env variables: PYTHON_PREFIX and OSMESA_PREFIX to the ones you want to use
+(read comments in CMakeLists.txt for more details) 
+I used python3.7 and it works.
+After compiling, you will find the bop_renderer.cpython-37m-x86_64-linux-gnu.so
+file in the bop_renderer/build folder. To use the bop renderer, make sure
+that the folder containing the .so is in the path, for example in a python 
+console:
+>>> sys.path.append("bop_renderer/build")
+>>> import bop_renderer
+However, for the sake of this project, it is sufficient to soft link the .so 
+to the base folder of this repo, i.e.:
+ln -s /path/to/gdrnpp_bop2022/bop_renderer_repo/build/bop_renderer.cpython-37m-x86_64-linux-gnu.so /path/to/gdrnpp_bop2022
+Moreover, when doing import bop_renderer in python you might encounter error
+related to LLVM. The LLVM has been previously installed using bop_renderer/osmesa-install.sh
+and installed in a folder chosen by the user (/opt/llvm in my case). When importing bop_renderer, the bop_renderer.cpython-37m-x86_64-linux-gnu.so 
+searches for the llvm .so files in the paths specified in the LD_LIBRARY_PATH
+environment variable. Therefore add the above mentioned path with:
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/llvm/lib/
